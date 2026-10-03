@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { Classroom, AuditorProfile } from '../../types';
+import type { Classroom, AppTab } from '../../types';
 import { ClassroomCard } from './ClassroomCard';
 import { 
   Search, 
@@ -12,16 +12,14 @@ import { sound } from '../../services/soundService';
 
 interface AuditorDashboardProps {
   classrooms: Classroom[];
-  auditor: AuditorProfile;
   onStartAuditForClass: (classroom?: Classroom) => void;
   onViewClassroomDetails: (classroom: Classroom) => void;
-  onNavigateToTab: (tab: 'dashboard' | 'leaderboard' | 'poster') => void;
+  onNavigateToTab: (tab: AppTab) => void;
   onOpenPosterForClass?: (classroom: Classroom) => void;
 }
 
 export const AuditorDashboard: React.FC<AuditorDashboardProps> = ({
   classrooms,
-  auditor,
   onStartAuditForClass,
   onViewClassroomDetails,
   onNavigateToTab,
@@ -91,10 +89,7 @@ export const AuditorDashboard: React.FC<AuditorDashboardProps> = ({
         <div>
           <div className="flex items-center space-x-2 mb-1.5">
             <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-              Patrol Auditor: {auditor.name}
-            </span>
-            <span className="text-xs text-slate-400 font-bold">
-              • Level {auditor.level}
+              Campus Environmental Patrol
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black font-display text-white tracking-tight">
@@ -182,6 +177,38 @@ export const AuditorDashboard: React.FC<AuditorDashboardProps> = ({
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Calendar History Callout */}
+      <div 
+        onClick={() => {
+          sound.playPop();
+          onNavigateToTab('calendar');
+        }}
+        className="bg-gradient-to-r from-indigo-950/70 via-slate-900 to-purple-950/60 rounded-3xl p-4 sm:p-5 border border-indigo-500/30 flex items-center justify-between cursor-pointer hover:border-indigo-400 transition-all group active:scale-[0.99] shadow-md"
+      >
+        <div className="flex items-center space-x-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xl shrink-0 border border-indigo-500/40 group-hover:scale-105 transition-transform shadow-xs">
+            📅
+          </div>
+          <div>
+            <div className="flex items-center space-x-2">
+              <h3 className="text-xs sm:text-sm font-black text-white font-display">
+                Classroom Placement Calendar
+              </h3>
+              <span className="text-[9px] font-black text-indigo-300 bg-indigo-900/80 px-2 py-0.5 rounded-full border border-indigo-500/40 font-display">
+                Archive
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300 mt-0.5">
+              Check which classes placed what position on what days across the academic year.
+            </p>
+          </div>
+        </div>
+
+        <span className="text-xs font-black text-indigo-400 group-hover:text-indigo-300 group-hover:translate-x-1 transition-all shrink-0 ml-2 font-display hidden sm:inline-block">
+          Explore Calendar ➔
+        </span>
       </div>
 
       {/* Classroom Patrol Roster Section */}

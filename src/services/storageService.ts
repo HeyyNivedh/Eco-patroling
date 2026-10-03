@@ -1,4 +1,5 @@
 import type { Classroom, AuditLog, AuditorProfile, Badge, EnergyInfraction } from '../types';
+import { calendarService } from './calendarService';
 
 export const DEFAULT_ENERGY_INFRACTIONS: EnergyInfraction[] = [
   {
@@ -735,8 +736,15 @@ export const storageService = {
 
       const data = localStorage.getItem(STORAGE_KEYS.CLASSROOMS);
       if (data) {
-        const classrooms: Classroom[] = JSON.parse(data);
+        let classrooms: Classroom[] = JSON.parse(data);
         const todayStr = new Date().toISOString().split('T')[0];
+
+        // If classrooms have 0 historical audits across all rooms, seed rich historical data
+        const totalAudits = classrooms.reduce((acc, c) => acc + (c.historicalAudits?.length || 0), 0);
+        if (totalAudits === 0) {
+          classrooms = calendarService.createSampleAudits(classrooms);
+          this.saveClassrooms(classrooms);
+        }
         
         // Dynamically compute today's status & score based on current date
         return classrooms.map((cls) => {
@@ -752,8 +760,9 @@ export const storageService = {
     } catch (e) {
       console.error('Error loading classrooms from localStorage', e);
     }
-    this.saveClassrooms(INITIAL_CLASSROOMS);
-    return INITIAL_CLASSROOMS;
+    const seeded = calendarService.createSampleAudits(INITIAL_CLASSROOMS);
+    this.saveClassrooms(seeded);
+    return seeded;
   },
 
   saveClassrooms(classrooms: Classroom[]): void {
@@ -806,25 +815,32 @@ export const storageService = {
     logs.unshift(log);
     this.saveAuditLogs(logs);
 
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isToday = log.date === todayStr;
+
     // Update classroom
     const classrooms = this.getClassrooms();
     const updatedClassrooms = classrooms.map((cls) => {
       if (cls.id === log.classroomId) {
-        const history = [log, ...cls.historicalAudits];
+        // Filter out prior audit for the exact same date if re-auditing, then prepend
+        const existingHistory = (cls.historicalAudits || []).filter(
+          (h) => h.id !== log.id && h.date !== log.date
+        );
+        const history = [log, ...existingHistory].sort((a, b) => b.timestamp - a.timestamp);
         const recentScores = history.map((h) => h.greenScore);
         const avgScore = Math.round(recentScores.reduce((a, b) => a + b, 0) / recentScores.length);
         const totalGrams = history.reduce((sum, h) => sum + h.totalWasteGrams, 0);
         const avgGrams = Math.round(totalGrams / history.length);
         const infractionsAvg =
-          Math.round((history.reduce((sum, h) => sum + h.totalEnergyInfractionsCount, 0) / history.length) * 10) / 10;
+          Math.round((history.reduce((sum, h) => sum + (h.totalEnergyInfractionsCount || 0), 0) / history.length) * 10) / 10;
 
         return {
           ...cls,
           currentGreenScore: avgScore,
-          todayGreenScore: log.greenScore,
-          streakDays: cls.streakDays + 1,
-          status: 'audited_today' as const,
-          lastAuditedDate: new Date().toISOString(),
+          todayGreenScore: isToday ? log.greenScore : cls.todayGreenScore,
+          streakDays: Math.min(5, (cls.streakDays || 0) + 1),
+          status: isToday ? ('audited_today' as const) : cls.status,
+          lastAuditedDate: log.date,
           weeklyWasteAvgGrams: avgGrams,
           weeklyEnergyInfractionsAvg: infractionsAvg,
           historicalAudits: history,
@@ -863,7 +879,8 @@ export const storageService = {
     localStorage.removeItem('ecopatrol_classrooms_v2');
     localStorage.removeItem('ecopatrol_auditor_v2');
     localStorage.removeItem('ecopatrol_audit_logs_v2');
-    this.saveClassrooms(INITIAL_CLASSROOMS);
+    const seeded = calendarService.createSampleAudits(INITIAL_CLASSROOMS);
+    this.saveClassrooms(seeded);
     this.saveAuditorProfile(INITIAL_AUDITOR);
     this.saveAuditLogs([]);
   },

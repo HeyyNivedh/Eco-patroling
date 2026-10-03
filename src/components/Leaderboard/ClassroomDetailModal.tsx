@@ -14,6 +14,7 @@ interface ClassroomDetailModalProps {
   onClose: () => void;
   onStartAudit: (classroom: Classroom) => void;
   onOpenPosterForClass: (classroom: Classroom) => void;
+  onNavigateToCalendar?: (date?: string, classroomId?: string) => void;
 }
 
 export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
@@ -21,6 +22,7 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
   onClose,
   onStartAudit,
   onOpenPosterForClass,
+  onNavigateToCalendar,
 }) => {
   if (!classroom) return null;
 
@@ -116,11 +118,25 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center space-x-1.5 font-display">
                 <TrendingDown className="w-4 h-4 text-emerald-400" />
-                <span>Audit History</span>
+                <span>Audit & Placement History</span>
               </h4>
-              <span className="text-[10px] font-black text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full font-display border border-emerald-500/30">
-                Recent Audits
-              </span>
+              {onNavigateToCalendar ? (
+                <button
+                  onClick={() => {
+                    sound.playPop();
+                    onClose();
+                    onNavigateToCalendar(undefined, classroom.id);
+                  }}
+                  className="text-[10px] font-black text-indigo-400 bg-indigo-950/80 hover:bg-indigo-900/80 px-2.5 py-1 rounded-full font-display border border-indigo-500/40 cursor-pointer flex items-center space-x-1 transition-colors"
+                >
+                  <Calendar className="w-3 h-3" />
+                  <span>View in Calendar ➔</span>
+                </button>
+              ) : (
+                <span className="text-[10px] font-black text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full font-display border border-emerald-500/30">
+                  Recent Audits
+                </span>
+              )}
             </div>
 
             {/* Visual Bars for Past Audits */}
@@ -132,7 +148,7 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
                       <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
                       <div>
                         <span className="font-black text-white font-display">{audit.date}</span>
-                        <p className="text-[10px] text-slate-400 font-medium">Auditor: {audit.auditorName}</p>
+                        <p className="text-[10px] text-slate-400 font-medium">Verified Inspection</p>
                       </div>
                     </div>
 

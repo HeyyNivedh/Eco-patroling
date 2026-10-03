@@ -143,3 +143,39 @@ export interface AuditorProfile {
 
 export type LeaderboardTimeframe = 'daily' | 'weekly' | 'monthly' | 'all_time';
 export type LeaderboardSortBy = 'green_score' | 'waste_per_student' | 'energy_hygiene';
+export type AppTab = 'dashboard' | 'leaderboard' | 'calendar' | 'poster';
+
+export interface DailyPlacement {
+  classroom: Classroom;
+  rank: number;
+  greenScore: number;
+  wasteGrams: number;
+  wastePerStudentGrams: number;
+  energyInfractionsCount: number;
+  auditLog: AuditLog;
+  totalAuditedOnDay: number;
+}
+
+export interface DayAuditSummary {
+  date: string;
+  dateFormatted: string;
+  totalAudited: number;
+  winner?: DailyPlacement;
+  placements: DailyPlacement[];
+  averageScore: number;
+  totalWasteGrams: number;
+}
+
+export interface ClassDayHistoryEntry {
+  date: string;
+  dateFormatted: string;
+  rank: number;
+  totalAuditedOnDay: number;
+  greenScore: number;
+  wasteGrams: number;
+  wastePerStudentGrams: number;
+  energyInfractionsCount: number;
+  auditLog: AuditLog;
+  isWinner: boolean;
+}
+

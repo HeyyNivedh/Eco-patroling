@@ -10,6 +10,7 @@ import { sound } from '../../services/soundService';
 interface AuditWizardModalProps {
   initialClassroom?: Classroom;
   allClassrooms: Classroom[];
+  initialDate?: string;
   isOpen: boolean;
   onClose: () => void;
   onAuditSaved: (auditLog: AuditLog) => void;
@@ -19,12 +20,16 @@ interface AuditWizardModalProps {
 export const AuditWizardModal: React.FC<AuditWizardModalProps> = ({
   initialClassroom,
   allClassrooms,
+  initialDate,
   isOpen,
   onClose,
   onAuditSaved,
 }) => {
   const [selectedClassroom, setSelectedClassroom] = useState<Classroom>(
     initialClassroom || allClassrooms[0]
+  );
+  const [auditDate, setAuditDate] = useState<string>(
+    initialDate || new Date().toISOString().split('T')[0]
   );
   // Pure 2-step flow: 1. Waste Check -> 2. Score & Award
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
@@ -62,8 +67,9 @@ export const AuditWizardModal: React.FC<AuditWizardModalProps> = ({
       classroomName: selectedClassroom.name,
       auditorName: auditor.name,
       auditorId: 'auditor-active',
-      date: new Date().toISOString().split('T')[0],
+      date: auditDate,
       timestamp: Date.now(),
+
       energyInfractions: [],
       wasteItems: [],
       wasteAssessment,
@@ -99,27 +105,42 @@ export const AuditWizardModal: React.FC<AuditWizardModalProps> = ({
               <h2 className="text-base sm:text-lg font-black font-display tracking-tight text-white flex items-center space-x-2">
                 <span>Classroom Waste Audit</span>
               </h2>
-              {/* Classroom Switcher Dropdown */}
-              <div className="flex items-center space-x-1.5 mt-0.5">
-                <span className="text-[11px] text-slate-400 font-bold">Class:</span>
-                <select
-                  value={selectedClassroom.id}
-                  onChange={(e) => {
-                    const found = allClassrooms.find((c) => c.id === e.target.value);
-                    if (found) {
-                      sound.playPop();
-                      setSelectedClassroom(found);
-                    }
-                  }}
-                  disabled={currentStep > 1}
-                  className="bg-slate-850 text-emerald-400 text-xs font-black px-2 py-0.5 rounded-lg border border-slate-700 focus:outline-none"
-                >
-                  {allClassrooms.map((cls) => (
-                    <option key={cls.id} value={cls.id}>
-                      {cls.name} ({cls.roomNumber})
-                    </option>
-                  ))}
-                </select>
+              {/* Classroom Switcher Dropdown & Audit Date */}
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-[11px] text-slate-400 font-bold">Class:</span>
+                  <select
+                    value={selectedClassroom.id}
+                    onChange={(e) => {
+                      const found = allClassrooms.find((c) => c.id === e.target.value);
+                      if (found) {
+                        sound.playPop();
+                        setSelectedClassroom(found);
+                      }
+                    }}
+                    disabled={currentStep > 1}
+                    className="bg-slate-850 text-emerald-400 text-xs font-black px-2 py-0.5 rounded-lg border border-slate-700 focus:outline-none"
+                  >
+                    {allClassrooms.map((cls) => (
+                      <option key={cls.id} value={cls.id}>
+                        {cls.name} ({cls.roomNumber})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-[11px] text-slate-400 font-bold">Date:</span>
+                  <input
+                    type="date"
+                    value={auditDate}
+                    onChange={(e) => {
+                      if (e.target.value) setAuditDate(e.target.value);
+                    }}
+                    disabled={currentStep > 1}
+                    className="bg-slate-850 text-indigo-300 text-xs font-bold px-2 py-0.5 rounded-lg border border-slate-700 focus:outline-none"
+                  />
+                </div>
               </div>
             </div>
           </div>

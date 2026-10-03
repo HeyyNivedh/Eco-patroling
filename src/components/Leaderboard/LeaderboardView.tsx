@@ -18,6 +18,7 @@ interface LeaderboardViewProps {
   classrooms: Classroom[];
   onStartAudit: (classroom: Classroom) => void;
   onOpenPosterForClass: (classroom: Classroom) => void;
+  onNavigateToCalendar?: (date?: string) => void;
 }
 
 export interface RankedClassroomItem {
@@ -32,6 +33,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
   classrooms,
   onStartAudit,
   onOpenPosterForClass,
+  onNavigateToCalendar,
 }) => {
   // Default to daily as requested
   const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>('daily');
@@ -161,18 +163,33 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
             </div>
           </div>
 
-          {dailyChampion && (
-            <button
-              onClick={() => {
-                sound.playPop();
-                onOpenPosterForClass(dailyChampion.classroom);
-              }}
-              className="bg-white text-slate-950 font-black text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-md hover:bg-amber-50 active:scale-95 cursor-pointer flex items-center space-x-1.5 shrink-0"
-            >
-              <Award className="w-4 h-4 text-amber-600" />
-              <span>Print Daily Trophy ➔</span>
-            </button>
-          )}
+          <div className="flex items-center space-x-2 shrink-0">
+            {onNavigateToCalendar && (
+              <button
+                onClick={() => {
+                  sound.playPop();
+                  onNavigateToCalendar(todayStr);
+                }}
+                className="bg-amber-950/40 hover:bg-amber-900/60 text-white font-bold text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-amber-300/40 active:scale-95 cursor-pointer flex items-center space-x-1.5"
+              >
+                <Calendar className="w-4 h-4 text-amber-200" />
+                <span>Past Days Calendar ➔</span>
+              </button>
+            )}
+
+            {dailyChampion && (
+              <button
+                onClick={() => {
+                  sound.playPop();
+                  onOpenPosterForClass(dailyChampion.classroom);
+                }}
+                className="bg-white text-slate-950 font-black text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-md hover:bg-amber-50 active:scale-95 cursor-pointer flex items-center space-x-1.5 shrink-0"
+              >
+                <Award className="w-4 h-4 text-amber-600" />
+                <span>Print Daily Trophy ➔</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -238,6 +255,20 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
             <Sparkles className="w-3.5 h-3.5" />
             <span>All-Time</span>
           </button>
+
+          {/* Calendar History Shortcut */}
+          {onNavigateToCalendar && (
+            <button
+              onClick={() => {
+                sound.playPop();
+                onNavigateToCalendar();
+              }}
+              className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap flex items-center space-x-1.5 bg-indigo-950/70 text-indigo-300 border border-indigo-500/50 hover:bg-indigo-900/80 hover:text-white shadow-xs"
+            >
+              <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+              <span>📅 Calendar History</span>
+            </button>
+          )}
         </div>
 
         {/* Sort criteria */}

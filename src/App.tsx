@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import type { Classroom, AuditorProfile, AuditLog } from './types';
+import type { Classroom, AuditorProfile, AuditLog, AppTab } from './types';
 import { storageService } from './services/storageService';
 import { sound } from './services/soundService';
 import { Header } from './components/Header';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { AuditorDashboard } from './components/Dashboard/AuditorDashboard';
 import { LeaderboardView } from './components/Leaderboard/LeaderboardView';
+import { CalendarView } from './components/Calendar/CalendarView';
 import { PosterGeneratorView } from './components/PosterGenerator/PosterGeneratorView';
 import { AuditWizardModal } from './components/AuditWizard/AuditWizardModal';
 import { SettingsModal } from './components/Settings/SettingsModal';
@@ -14,7 +15,9 @@ import { ClassroomDetailModal } from './components/Leaderboard/ClassroomDetailMo
 export const App: React.FC = () => {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [auditor, setAuditor] = useState<AuditorProfile>(storageService.getAuditorProfile());
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'leaderboard' | 'poster'>('dashboard');
+  const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
+  const [calendarTargetDate, setCalendarTargetDate] = useState<string | undefined>(undefined);
+  const [auditWizardDate, setAuditWizardDate] = useState<string | undefined>(undefined);
 
   // Modals state
   const [isAuditWizardOpen, setIsAuditWizardOpen] = useState<boolean>(false);
@@ -33,8 +36,9 @@ export const App: React.FC = () => {
   }, []);
 
   // Launch Audit for class or generic
-  const handleStartAudit = (classroom?: Classroom) => {
+  const handleStartAudit = (classroom?: Classroom, dateStr?: string) => {
     setActiveAuditClassroom(classroom || classrooms[0]);
+    setAuditWizardDate(dateStr);
     setIsAuditWizardOpen(true);
   };
 
@@ -75,6 +79,12 @@ export const App: React.FC = () => {
     setActiveTab('poster');
   };
 
+  // Jump to Calendar
+  const handleNavigateToCalendar = (dateStr?: string) => {
+    if (dateStr) setCalendarTargetDate(dateStr);
+    setActiveTab('calendar');
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-emerald-400 selection:text-slate-950 font-sans pb-28 sm:pb-32 md:pb-0">
       
@@ -93,7 +103,6 @@ export const App: React.FC = () => {
         {activeTab === 'dashboard' && (
           <AuditorDashboard
             classrooms={classrooms}
-            auditor={auditor}
             onStartAuditForClass={handleStartAudit}
             onViewClassroomDetails={(cls) => setDetailModalClassroom(cls)}
             onNavigateToTab={(tab) => setActiveTab(tab)}
@@ -106,6 +115,17 @@ export const App: React.FC = () => {
             classrooms={classrooms}
             onStartAudit={handleStartAudit}
             onOpenPosterForClass={handleOpenPosterForClass}
+            onNavigateToCalendar={handleNavigateToCalendar}
+          />
+        )}
+
+        {activeTab === 'calendar' && (
+          <CalendarView
+            classrooms={classrooms}
+            initialDate={calendarTargetDate}
+            onStartAuditForDate={(cls, dateStr) => handleStartAudit(cls, dateStr)}
+            onOpenPosterForClass={handleOpenPosterForClass}
+            onViewClassroomDetails={(cls) => setDetailModalClassroom(cls)}
           />
         )}
 
@@ -143,6 +163,7 @@ export const App: React.FC = () => {
         <AuditWizardModal
           initialClassroom={activeAuditClassroom}
           allClassrooms={classrooms}
+          initialDate={auditWizardDate}
           isOpen={isAuditWizardOpen}
           onClose={() => setIsAuditWizardOpen(false)}
           onAuditSaved={handleAuditSaved}
@@ -168,6 +189,7 @@ export const App: React.FC = () => {
           onClose={() => setDetailModalClassroom(null)}
           onStartAudit={handleStartAudit}
           onOpenPosterForClass={handleOpenPosterForClass}
+          onNavigateToCalendar={handleNavigateToCalendar}
         />
       )}
     </div>
@@ -175,3 +197,4 @@ export const App: React.FC = () => {
 };
 
 export default App;
+
